@@ -2,78 +2,149 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#161b22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <title>CodeBot — программирование через игру</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  background: #0d1117;
-  color: #c9d1d9;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --panel2: #21262d;
+  --border: #30363d;
+  --border-hi: #58a6ff;
+  --text: #c9d1d9;
+  --muted: #8b949e;
+  --dim: #6e7681;
+  --blue: #58a6ff;
+  --blue-lt: #79c0ff;
+  --green: #3fb950;
+  --green-d: #238636;
+  --green-hi: #2ea043;
+  --red: #f85149;
+  --red-d: #da3633;
+  --orange: #f0883e;
 }
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(10px, env(safe-area-inset-right))
+    max(10px, env(safe-area-inset-bottom))
+    max(10px, env(safe-area-inset-left));
+  overscroll-behavior: contain;
+  -webkit-font-smoothing: antialiased;
+}
+
 .game {
+  margin: auto;
   width: 100%;
   max-width: 920px;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
+
+/* ---------- Header ---------- */
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #30363d;
-}
-h1 { font-size: 24px; color: #58a6ff; font-weight: 600; }
-h1::before { content: '> '; color: #3fb950; }
-.level-indicator { color: #8b949e; font-size: 14px; }
-.level-indicator b { color: #f0883e; }
-.main { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-@media (max-width: 740px) { .main { grid-template-columns: 1fr; } }
-.task {
-  background: #0d1117;
-  border-left: 3px solid #58a6ff;
-  padding: 10px 14px;
   margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+h1 {
+  font-size: 22px;
+  color: var(--blue);
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+h1::before { content: '> '; color: var(--green); }
+.level-indicator {
+  color: var(--muted);
   font-size: 13px;
-  color: #8b949e;
+  white-space: nowrap;
+}
+.level-indicator b { color: var(--orange); }
+
+/* ---------- Layout ---------- */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.left, .right { min-width: 0; }
+.right { display: flex; flex-direction: column; }
+
+/* ---------- Task ---------- */
+.task {
+  background: var(--bg);
+  border-left: 3px solid var(--blue);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--muted);
   border-radius: 4px;
   line-height: 1.5;
 }
-.task b { color: #c9d1d9; }
-.grid-wrap { display: flex; justify-content: center; }
+.task b { color: var(--text); }
+
+/* ---------- Grid ---------- */
+.grid-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
 .grid {
   display: grid;
   gap: 4px;
-  background: #0d1117;
+  background: var(--bg);
   padding: 10px;
   border-radius: 10px;
-  border: 1px solid #30363d;
+  border: 1px solid var(--border);
+  width: max-content;
+  margin: 0 auto;
 }
 .cell {
-  width: 52px;
-  height: 52px;
+  width: var(--cell-size, 52px);
+  height: var(--cell-size, 52px);
   border-radius: 6px;
-  background: #21262d;
+  background: var(--panel2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: calc(var(--cell-size, 52px) * 0.42);
   font-weight: bold;
   color: white;
-  transition: all 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
   position: relative;
 }
 .cell.wall {
-  background: repeating-linear-gradient(45deg, #21262d, #21262d 4px, #2d333b 4px, #2d333b 8px);
+  background: repeating-linear-gradient(45deg, var(--panel2), var(--panel2) 4px, #2d333b 4px, #2d333b 8px);
   border: 1px solid #444c56;
 }
 .cell.goal::before {
@@ -81,76 +152,161 @@ h1::before { content: '> '; color: #3fb950; }
   position: absolute;
   inset: 22%;
   border-radius: 50%;
-  background: #3fb950;
-  box-shadow: 0 0 12px #3fb950;
+  background: var(--green);
+  box-shadow: 0 0 12px var(--green);
   animation: pulse 1.5s ease-in-out infinite;
 }
 .cell.goal.robot::before { display: none; }
 @keyframes pulse {
   0%,100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.15); opacity: 1; }
+  50%     { transform: scale(1.15); opacity: 1; }
 }
 .cell.robot {
   background: linear-gradient(135deg, #0969da, #1f6feb);
   box-shadow: 0 0 16px rgba(88,166,255,0.55);
   z-index: 2;
 }
-.editor label {
-  display: block;
-  font-size: 12px;
-  color: #8b949e;
+
+/* ---------- Editor ---------- */
+.editor { margin-bottom: 10px; }
+.editor-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 #code {
   width: 100%;
-  height: 140px;
-  background: #0d1117;
-  border: 1px solid #30363d;
+  height: 110px;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px;
-  color: #79c0ff;
+  padding: 10px 12px;
+  color: var(--blue-lt);
   font-family: inherit;
-  font-size: 15px;
-  resize: vertical;
+  font-size: 16px;
+  line-height: 1.5;
+  resize: none;
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+}
+#code:focus {
+  border-color: var(--border-hi);
+  box-shadow: 0 0 0 3px rgba(88,166,255,0.15);
+}
+.help {
+  font-size: 11px;
+  color: var(--dim);
+  margin-top: 6px;
   line-height: 1.6;
 }
-#code:focus { border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88,166,255,0.15); }
-.help { font-size: 11px; color: #6e7681; margin-top: 6px; line-height: 1.6; }
-.help code { background: #21262d; padding: 1px 5px; border-radius: 3px; color: #79c0ff; }
-.buttons { display: flex; gap: 8px; margin-top: 16px; }
-button {
+.help code {
+  background: var(--panel2);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--blue-lt);
+}
+
+/* ---------- Command pad ---------- */
+.pad {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.pad-row {
+  display: flex;
+  gap: 5px;
+}
+.pad-row button {
   flex: 1;
-  padding: 10px 16px;
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #c9d1d9;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background 0.1s, transform 0.05s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pad-row button:hover { background: #2d333b; }
+.pad-row button:active {
+  transform: scale(0.94);
+  background: #30363d;
+}
+.pad-row button.cmd   { color: var(--blue-lt); }
+.pad-row button.num   { color: var(--orange); font-size: 16px; }
+.pad-row button.del   { color: var(--red); }
+.pad-row button:disabled { opacity: 0.4; }
+
+/* ---------- Buttons ---------- */
+.buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.buttons button {
+  flex: 1;
+  min-height: 46px;
+  padding: 0 12px;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--text);
   border-radius: 8px;
   font-family: inherit;
   font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s;
   font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background 0.15s, transform 0.05s;
 }
-button:hover:not(:disabled) { background: #30363d; border-color: #58a6ff; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-button.primary { background: #238636; border-color: #2ea043; color: white; }
-button.primary:hover:not(:disabled) { background: #2ea043; }
+.buttons button:hover:not(:disabled) {
+  background: #30363d;
+  border-color: var(--blue);
+}
+.buttons button:active:not(:disabled) { transform: scale(0.97); }
+.buttons button:disabled { opacity: 0.5; cursor: not-allowed; }
+.buttons #run {
+  flex: 1.6;
+  background: var(--green-d);
+  border-color: var(--green-hi);
+  color: white;
+}
+.buttons #run:hover:not(:disabled) { background: var(--green-hi); }
+
+/* ---------- Status ---------- */
 .status {
-  margin-top: 12px;
   padding: 10px 12px;
   border-radius: 6px;
   font-size: 13px;
   min-height: 42px;
-  background: #0d1117;
-  border: 1px solid #30363d;
-  color: #8b949e;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
   line-height: 1.5;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
-.status.ok { color: #3fb950; border-color: #238636; background: rgba(35,134,54,0.1); }
-.status.err { color: #f85149; border-color: #da3633; background: rgba(218,54,51,0.1); }
+.status.ok  { color: var(--green); border-color: var(--green-d); background: rgba(35,134,54,0.1); }
+.status.err { color: var(--red);   border-color: var(--red-d);   background: rgba(218,54,51,0.1); }
+
+/* ---------- Overlay ---------- */
 .overlay {
   position: fixed;
   inset: 0;
@@ -160,20 +316,126 @@ button.primary:hover:not(:disabled) { background: #2ea043; }
   justify-content: center;
   z-index: 100;
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
 }
 .overlay.show { display: flex; }
 .overlay-content {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--panel);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 40px;
+  padding: 32px 24px;
   text-align: center;
-  max-width: 400px;
+  max-width: 380px;
+  width: 100%;
   animation: pop 0.3s ease;
 }
-@keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.overlay-content h2 { color: #3fb950; font-size: 28px; margin-bottom: 16px; }
-.overlay-content p { color: #8b949e; margin-bottom: 24px; line-height: 1.6; }
+@keyframes pop {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.overlay-content h2 {
+  color: var(--green);
+  font-size: 26px;
+  margin-bottom: 14px;
+}
+.overlay-content p {
+  color: var(--muted);
+  margin-bottom: 22px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+.overlay-content button {
+  width: 100%;
+  min-height: 48px;
+  background: var(--green-d);
+  border: 1px solid var(--green-hi);
+  color: white;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.overlay-content button:hover { background: var(--green-hi); }
+
+/* =================== MOBILE =================== */
+@media (max-width: 740px) {
+  body {
+    padding:
+      max(6px, env(safe-area-inset-top))
+      max(6px, env(safe-area-inset-right))
+      max(6px, env(safe-area-inset-bottom))
+      max(6px, env(safe-area-inset-left));
+  }
+  .game {
+    padding: 12px;
+    border-radius: 10px;
+    border-width: 1px;
+  }
+  header {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+  h1 { font-size: 18px; }
+  .level-indicator { font-size: 12px; }
+
+  .main {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .task {
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .grid { padding: 8px; gap: 3px; }
+  .cell { border-radius: 5px; }
+
+  .editor { margin-bottom: 8px; }
+  #code { height: 84px; padding: 8px 10px; }
+
+  .help { display: none; }   /* панель сама по себе — наглядная подсказка */
+
+  .pad { gap: 5px; margin-bottom: 8px; }
+  .pad-row { gap: 4px; }
+  .pad-row button {
+    height: 42px;
+    font-size: 16px;
+    border-radius: 7px;
+  }
+  .pad-row button.num { font-size: 15px; }
+
+  .buttons { gap: 6px; margin-bottom: 8px; }
+  .buttons button {
+    min-height: 46px;
+    font-size: 13px;
+    padding: 0 8px;
+  }
+
+  .status { font-size: 12px; padding: 9px 10px; min-height: 40px; }
+}
+
+@media (max-width: 380px) {
+  h1 { font-size: 16px; }
+  .level-indicator { font-size: 11px; }
+  .pad-row button { height: 40px; font-size: 15px; }
+  .pad-row button.num { font-size: 14px; }
+  .buttons button { font-size: 12px; }
+}
+
+/* Скрываем resize-ручку и лёгкий «наклон» на десктопе */
+@media (min-width: 741px) {
+  #code { resize: vertical; }
+}
+
+/* Планшеты в портрете */
+@media (min-width: 741px) and (max-width: 920px) {
+  .main { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -182,103 +444,116 @@ button.primary:hover:not(:disabled) { background: #2ea043; }
     <h1>CodeBot</h1>
     <div class="level-indicator">Уровень <b id="lvl-num">1</b> / <span id="lvl-total">6</span></div>
   </header>
+
   <div class="main">
     <div class="left">
       <div class="task" id="task"></div>
       <div class="grid-wrap"><div class="grid" id="grid"></div></div>
     </div>
+
     <div class="right">
       <div class="editor">
-        <label>Программа робота</label>
-        <textarea id="code" placeholder="F2" spellcheck="false"></textarea>
+        <div class="editor-label"><span>Программа робота</span></div>
+        <textarea id="code"
+                  placeholder="F2"
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="characters"
+                  inputmode="text"></textarea>
         <div class="help">
           <code>F</code> вперёд · <code>L</code> налево · <code>R</code> направо<br>
-          <code>F3</code> = <code>FFF</code> · <code>(FL)2</code> = <code>FLFL</code>
+          <code>F3</code> = <code>FFF</code> · <code>(FL)2</code> = <code>FLFL</code> · <b>Ctrl+Enter</b> — запуск
         </div>
       </div>
+
+      <div class="pad" role="toolbar" aria-label="Панель команд">
+        <div class="pad-row">
+          <button class="cmd" data-ins="F" aria-label="Вперёд">F</button>
+          <button class="cmd" data-ins="L" aria-label="Налево">L</button>
+          <button class="cmd" data-ins="R" aria-label="Направо">R</button>
+          <button class="cmd" data-ins="(" aria-label="Открыть скобку">(</button>
+          <button class="cmd" data-ins=")" aria-label="Закрыть скобку">)</button>
+          <button class="del" data-act="backspace" aria-label="Стереть">⌫</button>
+        </div>
+        <div class="pad-row">
+          <button class="num" data-ins="1">1</button>
+          <button class="num" data-ins="2">2</button>
+          <button class="num" data-ins="3">3</button>
+          <button class="num" data-ins="4">4</button>
+          <button class="num" data-ins="5">5</button>
+          <button class="num" data-ins="6">6</button>
+          <button class="num" data-ins="7">7</button>
+          <button class="num" data-ins="8">8</button>
+          <button class="num" data-ins="9">9</button>
+        </div>
+      </div>
+
       <div class="buttons">
         <button id="run" class="primary">▶ Запустить</button>
         <button id="reset">↺ Сброс</button>
       </div>
+
       <div class="status" id="status">Напиши программу и запусти её</div>
     </div>
   </div>
 </div>
+
 <div class="overlay" id="overlay">
   <div class="overlay-content">
     <h2>🎉 Победа!</h2>
     <p>Ты запрограммировал робота во всех уровнях!<br>Отличная работа, программист.</p>
-    <button id="play-again" class="primary" style="width:100%">Играть снова</button>
+    <button id="play-again">Играть снова</button>
   </div>
 </div>
+
 <script>
+/* ======================= УРОВНИ ======================= */
 const levels = [
-  {
-    size: 3,
-    start: { x: 0, y: 0, dir: 1 },
-    goal: { x: 2, y: 0 },
-    walls: [],
+  { size: 3, start: {x:0,y:0,dir:1}, goal: {x:2,y:0}, walls: [],
     hint: 'Робот смотрит вправо, цель прямо впереди.',
-    placeholder: 'F2'
-  },
-  {
-    size: 3,
-    start: { x: 0, y: 0, dir: 1 },
-    goal: { x: 0, y: 2 },
-    walls: [],
+    placeholder: 'F2' },
+  { size: 3, start: {x:0,y:0,dir:1}, goal: {x:0,y:2}, walls: [],
     hint: 'Цель внизу — сначала поверни робота.',
-    placeholder: 'RF2'
-  },
-  {
-    size: 3,
-    start: { x: 0, y: 0, dir: 1 },
-    goal: { x: 2, y: 0 },
+    placeholder: 'RF2' },
+  { size: 3, start: {x:0,y:0,dir:1}, goal: {x:2,y:0},
     walls: [{x:1,y:0}],
     hint: 'На пути стена — обойди её снизу.',
-    placeholder: 'RFLFFLF'
-  },
-  {
-    size: 3,
-    start: { x: 0, y: 0, dir: 1 },
-    goal: { x: 2, y: 2 },
-    walls: [],
-    hint: 'Лестница! Заметил закономерность? Используй цикл.',
-    placeholder: '(RFLF)2'
-  },
-  {
-    size: 4,
-    start: { x: 0, y: 0, dir: 1 },
-    goal: { x: 3, y: 3 },
+    placeholder: 'RFLFFLF' },
+  { size: 3, start: {x:0,y:0,dir:1}, goal: {x:2,y:2}, walls: [],
+    hint: 'Лестница! Используй цикл — скобки с цифрой.',
+    placeholder: '(RFLF)2' },
+  { size: 4, start: {x:0,y:0,dir:1}, goal: {x:3,y:3},
     walls: [{x:1,y:1},{x:2,y:2}],
     hint: 'Диагональная стена. Двигайся по краю.',
-    placeholder: 'F3 R F3'
-  },
-  {
-    size: 5,
-    start: { x: 0, y: 0, dir: 1 },
-    goal: { x: 4, y: 4 },
+    placeholder: 'F3 R F3' },
+  { size: 5, start: {x:0,y:0,dir:1}, goal: {x:4,y:4},
     walls: [{x:2,y:0},{x:1,y:2},{x:3,y:3}],
     hint: 'Финальный уровень. Найди путь через лабиринт.',
-    placeholder: 'R F3 L F R F L F3'
-  }
+    placeholder: 'R F3 L F R F L F3' }
 ];
 
+/* ======================= ССЫЛКИ ======================= */
+const gridEl   = document.getElementById('grid');
+const codeEl   = document.getElementById('code');
+const statusEl = document.getElementById('status');
+const taskEl   = document.getElementById('task');
+const runBtn   = document.getElementById('run');
+const resetBtn = document.getElementById('reset');
+const lvlNumEl = document.getElementById('lvl-num');
+const lvlTotalEl = document.getElementById('lvl-total');
+const overlay  = document.getElementById('overlay');
+const playAgainBtn = document.getElementById('play-again');
+const pad = document.querySelector('.pad');
+
+/* ======================= СОСТОЯНИЕ ======================= */
 let currentLevel = 0;
 let level = levels[0];
 let robot = { ...level.start };
 let running = false;
+let lastCursor = null;   // позиция курсора в textarea для вставки из панели
 
-const gridEl = document.getElementById('grid');
-const codeEl = document.getElementById('code');
-const statusEl = document.getElementById('status');
-const taskEl = document.getElementById('task');
-const runBtn = document.getElementById('run');
-const resetBtn = document.getElementById('reset');
-const lvlNumEl = document.getElementById('lvl-num');
-const lvlTotalEl = document.getElementById('lvl-total');
-const overlay = document.getElementById('overlay');
-const playAgainBtn = document.getElementById('play-again');
-
+/* ======================= УТИЛИТЫ ======================= */
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function setStatus(msg, cls = '') {
@@ -286,8 +561,22 @@ function setStatus(msg, cls = '') {
   statusEl.className = 'status ' + cls;
 }
 
+function updateAfterInput() {
+  if (running) return;
+  try {
+    const cmds = parseProgram(codeEl.value);
+    if (codeEl.value.trim()) {
+      setStatus('Команд к выполнению: ' + cmds.length);
+    } else {
+      setStatus('Напиши программу и запусти её');
+    }
+  } catch (e) {
+    /* молча, пока пользователь печатает */
+  }
+}
+
+/* ======================= GRID ======================= */
 function buildGrid() {
-  gridEl.style.gridTemplateColumns = `repeat(${level.size}, 52px)`;
   gridEl.innerHTML = '';
   const total = level.size * level.size;
   for (let i = 0; i < total; i++) {
@@ -295,6 +584,19 @@ function buildGrid() {
     cell.className = 'cell';
     gridEl.appendChild(cell);
   }
+  updateGridSize();
+}
+
+function updateGridSize() {
+  const wrap = gridEl.parentElement;
+  const available = (wrap.clientWidth || window.innerWidth) - 30;
+  const size = level.size;
+  const gap = 4;
+  const cellSize = Math.max(28,
+    Math.min(52, Math.floor((available - (size - 1) * gap) / size)));
+  gridEl.style.setProperty('--cell-size', cellSize + 'px');
+  gridEl.style.setProperty('--grid-size', size);
+  gridEl.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
 }
 
 function render() {
@@ -303,8 +605,10 @@ function render() {
       const cell = gridEl.children[y * level.size + x];
       cell.className = 'cell';
       cell.textContent = '';
-      if (level.walls.some(w => w.x === x && w.y === y)) cell.classList.add('wall');
-      if (level.goal.x === x && level.goal.y === y) cell.classList.add('goal');
+      if (level.walls.some(w => w.x === x && w.y === y))
+        cell.classList.add('wall');
+      if (level.goal.x === x && level.goal.y === y)
+        cell.classList.add('goal');
       if (robot.x === x && robot.y === y) {
         cell.classList.add('robot');
         cell.textContent = ['▲','▶','▼','◀'][robot.dir];
@@ -318,6 +622,7 @@ function resetRobot() {
   render();
 }
 
+/* ======================= УРОВНИ ======================= */
 function loadLevel(i) {
   currentLevel = i;
   level = levels[i];
@@ -326,13 +631,15 @@ function loadLevel(i) {
   taskEl.innerHTML = '<b>Задача:</b> ' + level.hint;
   codeEl.placeholder = level.placeholder;
   codeEl.value = '';
+  lastCursor = null;
   buildGrid();
   resetRobot();
   setStatus('Напиши программу и запусти её');
   runBtn.disabled = false;
-  setTimeout(() => codeEl.focus(), 50);
+  setTimeout(() => codeEl.focus({ preventScroll: true }), 60);
 }
 
+/* ======================= ПАРСЕР ======================= */
 function parseSimple(text) {
   const cmds = [];
   for (const c of text) {
@@ -374,6 +681,7 @@ function parseProgram(text) {
   return cmds;
 }
 
+/* ======================= ВЫПОЛНЕНИЕ ======================= */
 function execute(cmd) {
   if (cmd === 'L') { robot.dir = (robot.dir + 3) % 4; return true; }
   if (cmd === 'R') { robot.dir = (robot.dir + 1) % 4; return true; }
@@ -431,13 +739,13 @@ async function runProgram() {
     }
     if (atGoal()) {
       setStatus('✓ Уровень пройден за ' + (i + 1) + ' команд!', 'ok');
-      await sleep(800);
+      await sleep(700);
       nextLevel();
       running = false;
       runBtn.disabled = false;
       return;
     }
-    await sleep(240);
+    await sleep(230);
   }
 
   setStatus('✗ Робот не достиг цели. Попробуй ещё раз.', 'err');
@@ -453,12 +761,60 @@ function nextLevel() {
   loadLevel(currentLevel + 1);
 }
 
+/* ======================= ПАНЕЛЬ КОМАНД ======================= */
+function saveCursor() {
+  if (document.activeElement === codeEl) {
+    lastCursor = codeEl.selectionStart ?? codeEl.value.length;
+  }
+}
+
+function padInsert(text) {
+  if (running) return;
+  saveCursor();
+  const el = codeEl;
+  const pos = Math.min(lastCursor ?? el.value.length, el.value.length);
+  // Скрываем виртуальную клавиатуру — работаем пальцем по панели
+  if (document.activeElement === el) el.blur();
+  el.value = el.value.slice(0, pos) + text + el.value.slice(pos);
+  lastCursor = pos + text.length;
+  updateAfterInput();
+}
+
+function padBackspace() {
+  if (running) return;
+  saveCursor();
+  const el = codeEl;
+  const pos = Math.min(lastCursor ?? el.value.length, el.value.length);
+  if (pos <= 0) return;
+  if (document.activeElement === el) el.blur();
+  el.value = el.value.slice(0, pos - 1) + el.value.slice(pos);
+  lastCursor = pos - 1;
+  updateAfterInput();
+}
+
+pad.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  if (btn.dataset.act === 'backspace') padBackspace();
+  else if (btn.dataset.ins !== undefined) padInsert(btn.dataset.ins);
+});
+
+/* Отслеживаем позицию курсора в textarea */
+codeEl.addEventListener('click',  saveCursor);
+codeEl.addEventListener('keyup',  saveCursor);
+codeEl.addEventListener('select', saveCursor);
+codeEl.addEventListener('input',  () => { saveCursor(); updateAfterInput(); });
+codeEl.addEventListener('blur',   saveCursor);
+
+/* ======================= СОБЫТИЯ ======================= */
 runBtn.addEventListener('click', runProgram);
+
 resetBtn.addEventListener('click', () => {
   if (running) return;
   resetRobot();
   setStatus('Сброс. Робот в начальной позиции.');
 });
+
 playAgainBtn.addEventListener('click', () => {
   overlay.classList.remove('show');
   loadLevel(0);
@@ -471,18 +827,20 @@ codeEl.addEventListener('keydown', e => {
   }
 });
 
-codeEl.addEventListener('input', () => {
-  if (running) return;
-  try {
-    const cmds = parseProgram(codeEl.value);
-    if (codeEl.value.trim()) {
-      setStatus('Команд к выполнению: ' + cmds.length);
-    } else {
-      setStatus('Напиши программу и запусти её');
-    }
-  } catch (e) { /* тихо, пока пользователь печатает */ }
+/* Адаптив сетки при изменении размера/ориентации */
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(updateGridSize, 100);
+});
+window.addEventListener('orientationchange', () => {
+  setTimeout(updateGridSize, 150);
 });
 
+/* Отключаем pull-to-refresh Chrome Android только на игровом поле */
+gridEl.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+/* ======================= СТАРТ ======================= */
 loadLevel(0);
 </script>
 </body>
