@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>CodeBot — программирование через игру</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  background: #0d1117;
+  color: #c9d1d9;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.game {
+  width: 100%;
+  max-width: 920px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #30363d;
+}
+h1 { font-size: 24px; color: #58a6ff; font-weight: 600; }
+h1::before { content: '> '; color: #3fb950; }
+.level-indicator { color: #8b949e; font-size: 14px; }
+.level-indicator b { color: #f0883e; }
+.main { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 740px) { .main { grid-template-columns: 1fr; } }
+.task {
+  background: #0d1117;
+  border-left: 3px solid #58a6ff;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #8b949e;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+.task b { color: #c9d1d9; }
+.grid-wrap { display: flex; justify-content: center; }
+.grid {
+  display: grid;
+  gap: 4px;
+  background: #0d1117;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #30363d;
+}
+.cell {
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  background: #21262d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+  transition: all 0.15s;
+  position: relative;
+}
+.cell.wall {
+  background: repeating-linear-gradient(45deg, #21262d, #21262d 4px, #2d333b 4px, #2d333b 8px);
+  border: 1px solid #444c56;
+}
+.cell.goal::before {
+  content: '';
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  background: #3fb950;
+  box-shadow: 0 0 12px #3fb950;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.cell.goal.robot::before { display: none; }
+@keyframes pulse {
+  0%,100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+.cell.robot {
+  background: linear-gradient(135deg, #0969da, #1f6feb);
+  box-shadow: 0 0 16px rgba(88,166,255,0.55);
+  z-index: 2;
+}
+.editor label {
+  display: block;
+  font-size: 12px;
+  color: #8b949e;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+#code {
+  width: 100%;
+  height: 140px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px;
+  color: #79c0ff;
+  font-family: inherit;
+  font-size: 15px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+}
+#code:focus { border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88,166,255,0.15); }
+.help { font-size: 11px; color: #6e7681; margin-top: 6px; line-height: 1.6; }
+.help code { background: #21262d; padding: 1px 5px; border-radius: 3px; color: #79c0ff; }
+.buttons { display: flex; gap: 8px; margin-top: 16px; }
+button {
+  flex: 1;
+  padding: 10px 16px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 600;
+}
+button:hover:not(:disabled) { background: #30363d; border-color: #58a6ff; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.primary { background: #238636; border-color: #2ea043; color: white; }
+button.primary:hover:not(:disabled) { background: #2ea043; }
+.status {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  min-height: 42px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  line-height: 1.5;
+}
+.status.ok { color: #3fb950; border-color: #238636; background: rgba(35,134,54,0.1); }
+.status.err { color: #f85149; border-color: #da3633; background: rgba(218,54,51,0.1); }
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+.overlay.show { display: flex; }
+.overlay-content {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  max-width: 400px;
+  animation: pop 0.3s ease;
+}
+@keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.overlay-content h2 { color: #3fb950; font-size: 28px; margin-bottom: 16px; }
+.overlay-content p { color: #8b949e; margin-bottom: 24px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="game">
+  <header>
+    <h1>CodeBot</h1>
+    <div class="level-indicator">Уровень <b id="lvl-num">1</b> / <span id="lvl-total">6</span></div>
+  </header>
+  <div class="main">
+    <div class="left">
+      <div class="task" id="task"></div>
+      <div class="grid-wrap"><div class="grid" id="grid"></div></div>
+    </div>
+    <div class="right">
+      <div class="editor">
+        <label>Программа робота</label>
+        <textarea id="code" placeholder="F2" spellcheck="false"></textarea>
+        <div class="help">
+          <code>F</code> вперёд · <code>L</code> налево · <code>R</code> направо<br>
+          <code>F3</code> = <code>FFF</code> · <code>(FL)2</code> = <code>FLFL</code>
+        </div>
+      </div>
+      <div class="buttons">
+        <button id="run" class="primary">▶ Запустить</button>
+        <button id="reset">↺ Сброс</button>
+      </div>
+      <div class="status" id="status">Напиши программу и запусти её</div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="overlay">
+  <div class="overlay-content">
+    <h2>🎉 Победа!</h2>
+    <p>Ты запрограммировал робота во всех уровнях!<br>Отличная работа, программист.</p>
+    <button id="play-again" class="primary" style="width:100%">Играть снова</button>
+  </div>
+</div>
+<script>
+const levels = [
+  {
+    size: 3,
+    start: { x: 0, y: 0, dir: 1 },
+    goal: { x: 2, y: 0 },
+    walls: [],
+    hint: 'Робот смотрит вправо, цель прямо впереди.',
+    placeholder: 'F2'
+  },
+  {
+    size: 3,
+    start: { x: 0, y: 0, dir: 1 },
+    goal: { x: 0, y: 2 },
+    walls: [],
+    hint: 'Цель внизу — сначала поверни робота.',
+    placeholder: 'RF2'
+  },
+  {
+    size: 3,
+    start: { x: 0, y: 0, dir: 1 },
+    goal: { x: 2, y: 0 },
+    walls: [{x:1,y:0}],
+    hint: 'На пути стена — обойди её снизу.',
+    placeholder: 'RFLFFLF'
+  },
+  {
+    size: 3,
+    start: { x: 0, y: 0, dir: 1 },
+    goal: { x: 2, y: 2 },
+    walls: [],
+    hint: 'Лестница! Заметил закономерность? Используй цикл.',
+    placeholder: '(RFLF)2'
+  },
+  {
+    size: 4,
+    start: { x: 0, y: 0, dir: 1 },
+    goal: { x: 3, y: 3 },
+    walls: [{x:1,y:1},{x:2,y:2}],
+    hint: 'Диагональная стена. Двигайся по краю.',
+    placeholder: 'F3 R F3'
+  },
+  {
+    size: 5,
+    start: { x: 0, y: 0, dir: 1 },
+    goal: { x: 4, y: 4 },
+    walls: [{x:2,y:0},{x:1,y:2},{x:3,y:3}],
+    hint: 'Финальный уровень. Найди путь через лабиринт.',
+    placeholder: 'R F3 L F R F L F3'
+  }
+];
+
+let currentLevel = 0;
+let level = levels[0];
+let robot = { ...level.start };
+let running = false;
+
+const gridEl = document.getElementById('grid');
+const codeEl = document.getElementById('code');
+const statusEl = document.getElementById('status');
+const taskEl = document.getElementById('task');
+const runBtn = document.getElementById('run');
+const resetBtn = document.getElementById('reset');
+const lvlNumEl = document.getElementById('lvl-num');
+const lvlTotalEl = document.getElementById('lvl-total');
+const overlay = document.getElementById('overlay');
+const playAgainBtn = document.getElementById('play-again');
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function setStatus(msg, cls = '') {
+  statusEl.textContent = msg;
+  statusEl.className = 'status ' + cls;
+}
+
+function buildGrid() {
+  gridEl.style.gridTemplateColumns = `repeat(${level.size}, 52px)`;
+  gridEl.innerHTML = '';
+  const total = level.size * level.size;
+  for (let i = 0; i < total; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    gridEl.appendChild(cell);
+  }
+}
+
+function render() {
+  for (let y = 0; y < level.size; y++) {
+    for (let x = 0; x < level.size; x++) {
+      const cell = gridEl.children[y * level.size + x];
+      cell.className = 'cell';
+      cell.textContent = '';
+      if (level.walls.some(w => w.x === x && w.y === y)) cell.classList.add('wall');
+      if (level.goal.x === x && level.goal.y === y) cell.classList.add('goal');
+      if (robot.x === x && robot.y === y) {
+        cell.classList.add('robot');
+        cell.textContent = ['▲','▶','▼','◀'][robot.dir];
+      }
+    }
+  }
+}
+
+function resetRobot() {
+  robot = { ...level.start };
+  render();
+}
+
+function loadLevel(i) {
+  currentLevel = i;
+  level = levels[i];
+  lvlNumEl.textContent = i + 1;
+  lvlTotalEl.textContent = levels.length;
+  taskEl.innerHTML = '<b>Задача:</b> ' + level.hint;
+  codeEl.placeholder = level.placeholder;
+  codeEl.value = '';
+  buildGrid();
+  resetRobot();
+  setStatus('Напиши программу и запусти её');
+  runBtn.disabled = false;
+  setTimeout(() => codeEl.focus(), 50);
+}
+
+function parseSimple(text) {
+  const cmds = [];
+  for (const c of text) {
+    if (c === 'F' || c === 'L' || c === 'R') cmds.push(c);
+    else throw new Error('Неверный символ в скобках: ' + c);
+  }
+  return cmds;
+}
+
+function parseProgram(text) {
+  text = text.toUpperCase().replace(/\s+/g, '');
+  const cmds = [];
+  let i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (c === '(') {
+      const close = text.indexOf(')', i);
+      if (close === -1) throw new Error('Не закрыта скобка');
+      const inner = text.substring(i + 1, close);
+      i = close + 1;
+      let numStr = '';
+      while (i < text.length && /\d/.test(text[i])) { numStr += text[i]; i++; }
+      const n = numStr ? parseInt(numStr) : 1;
+      if (n > 20) throw new Error('Слишком много повторов (макс 20)');
+      const innerCmds = parseSimple(inner);
+      for (let k = 0; k < n; k++) cmds.push(...innerCmds);
+    } else if (c === 'F' || c === 'L' || c === 'R') {
+      const cmd = c;
+      i++;
+      let numStr = '';
+      while (i < text.length && /\d/.test(text[i])) { numStr += text[i]; i++; }
+      const n = numStr ? parseInt(numStr) : 1;
+      if (n > 100) throw new Error('Слишком много повторов (макс 100)');
+      for (let k = 0; k < n; k++) cmds.push(cmd);
+    } else {
+      throw new Error('Неизвестный символ: ' + c);
+    }
+  }
+  return cmds;
+}
+
+function execute(cmd) {
+  if (cmd === 'L') { robot.dir = (robot.dir + 3) % 4; return true; }
+  if (cmd === 'R') { robot.dir = (robot.dir + 1) % 4; return true; }
+  const dx = [0, 1, 0, -1][robot.dir];
+  const dy = [-1, 0, 1, 0][robot.dir];
+  const nx = robot.x + dx;
+  const ny = robot.y + dy;
+  if (nx < 0 || ny < 0 || nx >= level.size || ny >= level.size) return false;
+  if (level.walls.some(w => w.x === nx && w.y === ny)) return false;
+  robot.x = nx;
+  robot.y = ny;
+  return true;
+}
+
+const atGoal = () => robot.x === level.goal.x && robot.y === level.goal.y;
+
+async function runProgram() {
+  if (running) return;
+  running = true;
+  runBtn.disabled = true;
+  resetRobot();
+
+  let cmds;
+  try {
+    cmds = parseProgram(codeEl.value);
+  } catch (e) {
+    setStatus('❌ ' + e.message, 'err');
+    running = false;
+    runBtn.disabled = false;
+    return;
+  }
+  if (cmds.length === 0) {
+    setStatus('❌ Программа пуста', 'err');
+    running = false;
+    runBtn.disabled = false;
+    return;
+  }
+  if (cmds.length > 250) {
+    setStatus('❌ Слишком длинная программа (' + cmds.length + ' команд)', 'err');
+    running = false;
+    runBtn.disabled = false;
+    return;
+  }
+
+  setStatus('▶ Выполняется... (' + cmds.length + ' команд)');
+
+  for (let i = 0; i < cmds.length; i++) {
+    const ok = execute(cmds[i]);
+    render();
+    if (!ok) {
+      setStatus('💥 Столкновение! Робот врезался в стену.', 'err');
+      running = false;
+      runBtn.disabled = false;
+      return;
+    }
+    if (atGoal()) {
+      setStatus('✓ Уровень пройден за ' + (i + 1) + ' команд!', 'ok');
+      await sleep(800);
+      nextLevel();
+      running = false;
+      runBtn.disabled = false;
+      return;
+    }
+    await sleep(240);
+  }
+
+  setStatus('✗ Робот не достиг цели. Попробуй ещё раз.', 'err');
+  running = false;
+  runBtn.disabled = false;
+}
+
+function nextLevel() {
+  if (currentLevel + 1 >= levels.length) {
+    overlay.classList.add('show');
+    return;
+  }
+  loadLevel(currentLevel + 1);
+}
+
+runBtn.addEventListener('click', runProgram);
+resetBtn.addEventListener('click', () => {
+  if (running) return;
+  resetRobot();
+  setStatus('Сброс. Робот в начальной позиции.');
+});
+playAgainBtn.addEventListener('click', () => {
+  overlay.classList.remove('show');
+  loadLevel(0);
+});
+
+codeEl.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runProgram();
+  }
+});
+
+codeEl.addEventListener('input', () => {
+  if (running) return;
+  try {
+    const cmds = parseProgram(codeEl.value);
+    if (codeEl.value.trim()) {
+      setStatus('Команд к выполнению: ' + cmds.length);
+    } else {
+      setStatus('Напиши программу и запусти её');
+    }
+  } catch (e) { /* тихо, пока пользователь печатает */ }
+});
+
+loadLevel(0);
+</script>
+</body>
+</html>
